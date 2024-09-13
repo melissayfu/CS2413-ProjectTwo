@@ -12,14 +12,14 @@ Chip* output; // Ptr to the output chip (is NULL for output chips)
 double inputValue; //for the input chip
 
 public:
-double getInputValue() const; // Getter for inputValue
-
-public:
 // Constructor
 Chip(char type, const string& id);
+
 // Method prototypes
 void setInput1(Chip* inputChip); // Sets the first input chip
 void setInput2(Chip* inputChip); // second input chip (can be NULL)
+Chip* getInput1() const { return input1; }
+Chip* getInput2() const { return input2; }
 void setOutput(Chip* outputChip); // Sets the output chip (can be NULL)
 void compute(); // Performs the operation based on the chip type
 void display() const; // Displays the chip's information
@@ -27,6 +27,9 @@ void display() const; // Displays the chip's information
 //example: O50, Input 1 = S600 --- for the output Chip
 //example: A100, Input 1 = I1, Input 2 = I2, Output = M300
 string getId() const; // Returns the chip ID
+char getType() const; // Returns the chip type
+double getInputValue() const; // Getter for inputValue
+void setInputValue(double value); // Setter for inputValue
 };
 
 // Derived classes from Chip. Each class will implement the compute and display methods. Implementation by using Copilot.
@@ -92,6 +95,21 @@ void Chip::setOutput(Chip* outputChip) {
 // Returns the chip ID
 string Chip::getId() const {
     return id;
+}
+
+// Returns the chip type
+char Chip::getType() const {
+    return chipType;
+}
+
+// Getter for inputValue
+double Chip::getInputValue() const{
+    return inputValue;
+}
+
+// Setter for inputValue
+void Chip::setInputValue(double value) {
+    inputValue = value;
 }
 
 // AdditionChip methods
@@ -168,28 +186,83 @@ void InputChip::display() {
     cout << id << ", Output = " << (output ? output->getId() : "NULL") << endl;
 }
 
-int main() {
-  int numChips;
-Chip** allChips;
-int numCommands;
-cin >> numChips;
-//create an array Chip objects pointers
-allChips = new Chip*[numChips];
+// Function to find a chip by its ID
+Chip* findChipById(Chip** chips, int numChips, const string& chipId) {
+    for (int i = 0; i < numChips; i++) {
+        if (chips[i]->getId() == chipId) {
+            return chips[i];
+        }
+    }
+    return nullptr;
+}
 
-//each array location is a pointer to a Chip Object
-for (int i=0; i < numChips; i++) {
-//read the chip ID based on the first letter to determine its type
-//create the chip object and initialize it appropriately
-//store the chip object in the allChips array
-}
-for (int i=0; i < numCommands; i++) {
-// read from input the links and make the appropriate
-//connections. You may need to search the array allChips
-//to find the chip that is referred and connect.
-// If the first letter is an O, then execute the compute method
-// on the object referred.
-}
-cout << "***** Showing the connections that were established" << endl;
-//for each component created call the display () method
-return 0;
+int main() {
+    int numChips;
+    cin >> numChips;
+    Chip** chips = new Chip*[numChips];
+
+    // Create an array of Chip object pointers
+    for (int i = 0; i < numChips; i++) {
+        string chipId;
+        cin >> chipId;
+        if (chipId[0] == 'A') {
+            chips[i] = new AdditionChip(chipId);
+        } else if (chipId[0] == 'S') {
+            chips[i] = new SubtractionChip(chipId);
+        } else if (chipId[0] == 'M') {
+            chips[i] = new MultiplicationChip(chipId);
+        } else if (chipId[0] == 'N') {
+            chips[i] = new NegationChip(chipId);
+        } else if (chipId[0] == 'O') {
+            chips[i] = new OutputChip(chipId);
+        } else if (chipId[0] == 'I') {
+            chips[i] = new InputChip(chipId);
+        }
+    }
+
+    int numCommands;
+    cin >> numCommands;
+    for (int i = 0; i < numCommands; i++) {
+        // read from input the links and make the appropriate
+        // connections. You may need to search the array allChips
+        // to find the chip that is referred and connect.
+        // If the first letter is an O, then execute the compute method
+        // on the object referred.
+        string command, chip1, chip2;
+        cin >> command >> chip1 >> chip2;
+        if (command == "A") {
+            Chip* inputChip = findChipById(chips, numChips, chip1);
+            Chip* outputChip = findChipById(chips, numChips, chip2);
+            if (!outputChip->getInput1()) {
+                outputChip->setInput1(inputChip);
+            } else {
+                outputChip->setInput2(inputChip);
+            }
+        } else if (command == "I") {
+            double value;
+            cin >> value;
+            Chip* inputChip = findChipById(chips, numChips, chip1);
+            inputChip->setInputValue(value);
+        } else if (command == "C") {
+            for (int j = 0; j < numChips; ++j) {
+                chips[j]->compute();
+            }
+        } else if (command == "D") {
+            Chip* outputChip = findChipById(chips, numChips, chip1);
+            outputChip->display();
+        }
+    }
+    cout << "***** Showing the connections that were established" << endl;
+    for (int i = 0; i < numChips; ++i) {
+        chips[i]->display();  // for each component created call the display () method
+    }
+
+    // Clean up
+    for (int i = 0; i < numChips; ++i) {
+        delete chips[i];
+    }
+    delete[] chips;
+
+    return 0;
+
 }

@@ -8,7 +8,7 @@ protected:
     string id; // Unique identifier for the chip
     Chip* input1; // Pointer to the first input chip
     Chip* input2; // Pointer to the second input chip (can be NULL)
-    Chip* output; // Ptr to the output chip (is NULL for output chips)
+    Chip* output; // Pointer to the output chip (is NULL for output chips)
     double inputValue; //for the input chip
 
 public:

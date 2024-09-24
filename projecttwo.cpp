@@ -9,13 +9,13 @@ protected:
     Chip* input1; // Pointer to the first input chip
     Chip* input2; // Pointer to the second input chip (can be NULL)
     Chip* output; // Pointer to the output chip (is NULL for output chips)
-    double inputValue; //for the input chip
+    double inputValue; // For the input chip
 
 public:
     Chip* getInput1() const { return input1; }
+    Chip* getInput2() const { return input2; }
     Chip* getOutput() const { return output; }
 
-public:
     // Constructor
     Chip(char type, const string& id);
 
@@ -49,7 +49,7 @@ void Chip::setOutput(Chip* outputChip) {
     output = outputChip;
 }
 
-   // Performs the operation based on the chip type with recursive calls
+// Performs the operation based on the chip type with recursive calls
 void Chip::compute() {
     // Base case for input chip 'I', no computation needed, value is directly set.
     if (chipType == 'I') {
@@ -65,32 +65,32 @@ void Chip::compute() {
     }
 
     // Perform the appropriate operation based on the chip type
-     switch (chipType) {
-        case 'A': // Addition
-            if (input1 && input2) {
-                inputValue = (*input1).getInputValue() + (*input2).getInputValue();
-            }
-            break;
-        case 'S': // Subtraction
-            if (input1 && input2) {
-                inputValue = (*input1).getInputValue() - (*input2).getInputValue();
-            }
-            break;
-        case 'M': // Multiplication
-            if (input1 && input2) {
-                inputValue = (*input1).getInputValue() * (*input2).getInputValue();
-            }
-            break;
-        case 'N': // Negation
-            if (input1) {
-                inputValue = -(*input1).getInputValue();
-            }
-             break;
-        case 'O': // Output
-            if (input1) {
-                inputValue = (*input1).getInputValue();
-            }
-            break;
+    switch (chipType) {
+    case 'A': // Addition
+        if (input1 && input2) {
+            inputValue = input1->getInputValue() + input2->getInputValue();
+        }
+        break;
+    case 'S': // Subtraction
+        if (input1 && input2) {
+            inputValue = input1->getInputValue() - input2->getInputValue();
+        }
+        break;
+    case 'M': // Multiplication
+        if (input1 && input2) {
+            inputValue = input1->getInputValue() * input2->getInputValue();
+        }
+        break;
+    case 'N': // Negation
+        if (input1) {
+            inputValue = -(input1->getInputValue());
+        }
+        break;
+    case 'O': // Output
+        if (input1) {
+            inputValue = input1->getInputValue();
+        }
+        break;
     }
 }
 
@@ -116,7 +116,15 @@ void Chip::setInputValue(double value) {
 
 // Display the chip's information
 void Chip::display() const {
-    cout << id << ", Input 1 = " << (input1 ? (*input1).getId() : "NULL") << ", Input 2 = " << (input2 ? (*input2).getId() : "NULL") << ", Output = " << (output ? (*output).getId() : "NULL");
+    if (chipType == 'O') {
+        // Special case for the output chip
+        cout << id << ", Input 1 = " << (input1 ? input1->getId() : "NULL") << endl;
+    }
+    else {
+        cout << id << ", Input 1 = " << (input1 ? input1->getId() : "NULL")
+            << ", Input 2 = " << (input2 ? input2->getId() : "NULL")
+            << ", Output = " << (output ? output->getId() : "NULL") << endl;
+    }
 }
 
 // Function to find a chip by its ID
@@ -132,13 +140,31 @@ Chip* findChipById(Chip** chips, int numChips, const string& chipId) {
 int main() {
     int numChips;
     cin >> numChips;
-    Chip** chips = new Chip*[numChips];
+    Chip** chips = new Chip * [numChips];
 
     // Create an array of Chip object pointers
-     for (int i = 0; i < numChips; i++) {
+    for (int i = 0; i < numChips; i++) {
         string chipId;
         char chipTypeChar;
-        cin >> chipId >> chipTypeChar;
+
+        // We have to map chip types based on naming convention
+        cin >> chipId;
+        if (chipId[0] == 'I') {
+            chipTypeChar = 'I';
+        }
+        else if (chipId[0] == 'A') {
+            chipTypeChar = 'A';
+        }
+        else if (chipId[0] == 'M') {
+            chipTypeChar = 'M';
+        }
+        else if (chipId[0] == 'O') {
+            chipTypeChar = 'O';
+        }
+        else {
+            chipTypeChar = 'I'; // Default fallback
+        }
+
         chips[i] = new Chip(chipTypeChar, chipId);
     }
 
@@ -154,20 +180,27 @@ int main() {
 
             Chip* inputChip = findChipById(chips, numChips, chip1);
             Chip* outputChip = findChipById(chips, numChips, chip2);
+
+            // Set inputs and outputs
             if (!outputChip->getInput1()) {
                 outputChip->setInput1(inputChip);
-            } else {
+            }
+            else {
                 outputChip->setInput2(inputChip);
             }
-            inputChip->setOutput(outputChip); // Establish the connection
-        } else if (command == "I") {
+            // Set the output for the input chip if it is an intermediate node
+            if (!inputChip->getOutput()) {
+                inputChip->setOutput(outputChip); // Establish the connection
+            }
+        }
+        else if (command == "I") {
             string chip1;
             double value;
             cin >> chip1 >> value;
             Chip* inputChip = findChipById(chips, numChips, chip1);
             inputChip->setInputValue(value);
-
-        } else if (command == "O") {
+        }
+        else if (command == "O") {
             string chipId;
             cin >> chipId;
 
@@ -176,20 +209,29 @@ int main() {
                 cout << "Computation Starts" << endl;
                 outputChip->compute();  // Recursively computes based on chip type
                 cout << "The output value from this circuit is " << outputChip->getInputValue() << endl;
-            } else {
+            }
+            else {
                 cout << "Chip " << chipId << " not found." << endl;
             }
-        } else if (command == "D") {
+        }
+        else if (command == "D") {
             string chip1;
             cin >> chip1;
             Chip* outputChip = findChipById(chips, numChips, chip1);
             outputChip->display();
         }
     }
-    cout << "***** Showing the connections that were established" << endl;
+
+    cout << "***** Showing the connections that were established *****" << endl;
     for (int i = 0; i < numChips; ++i) {
         chips[i]->display();
     }
+
+    // Clean up dynamic memory
+    for (int i = 0; i < numChips; ++i) {
+        delete chips[i];
+    }
+    delete[] chips;
 
     return 0;
 }

@@ -116,14 +116,28 @@ void Chip::setInputValue(double value) {
 
 // Display the chip's information
 void Chip::display() const {
-    if (chipType == 'O') {
-        // Special case for the output chip
+     if (chipType == 'O') {
         cout << id << ", Input 1 = " << (input1 ? input1->getId() : "NULL") << endl;
     }
     else {
-        cout << id << ", Output = " << (output ? output->getId() : "NULL") << endl;
+        cout << id;
+
+        if (input1) {
+            cout << ", Input 1 = " << input1->getId();
+        }
+
+        if (input2) {
+            cout << ", Input 2 = " << input2->getId();
+        }
+
+        if (output) {
+            cout << ", Output = " << output->getId();
+        }
+
+        cout << endl;
     }
 }
+
 
 // Function to find a chip by its ID
 Chip* findChipById(Chip** chips, int numChips, const string& chipId) {

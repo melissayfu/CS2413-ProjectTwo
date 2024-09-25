@@ -234,7 +234,7 @@ int main() {
         }
     }
 
-    cout << "***** Showing the connections that were established *****" << endl;
+    cout << "***** Showing the connections that were established" << endl;
     for (int i = 0; i < numChips; ++i) {
         chips[i]->display();
     }

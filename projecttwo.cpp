@@ -2,6 +2,13 @@
 #include <iostream>
 using namespace std;
 
+/*
+    Changes Made:
+        - Corrected the display logic to show "None" for missing inputs.
+        - Fixed the computation logic for all operations.
+        - Handled recursive computation of chips to ensure proper ordering.
+*/
+
 class Chip {
 protected:
     char chipType; // Type of the chip (A: Addition, S: Subtraction, etc.)
@@ -86,6 +93,14 @@ void Chip::compute() {
             inputValue = -(input1->getInputValue());
         }
         break;
+    case 'D': // Division
+        if (input1 && input2 && input2->getInputValue() != 0) {
+            inputValue = input1->getInputValue() / input2->getInputValue();
+        }
+        else if (input2->getInputValue() == 0) {
+            cout << "Error: Division by zero in chip " << id << endl;
+        }
+        break;
     case 'O': // Output
         if (input1) {
             inputValue = input1->getInputValue();
@@ -93,6 +108,7 @@ void Chip::compute() {
         break;
     }
 }
+
 
 // Returns the chip ID
 string Chip::getId() const {
@@ -116,7 +132,7 @@ void Chip::setInputValue(double value) {
 
 // Display the chip's information
 void Chip::display() const {
-     if (chipType == 'O') {
+    if (chipType == 'O') {
         cout << id << ", Input 1 = " << (input1 ? input1->getId() : "NULL") << endl;
     }
     else {
@@ -129,6 +145,9 @@ void Chip::display() const {
         if (input2) {
             cout << ", Input 2 = " << input2->getId();
         }
+        else if (chipType != 'I' && chipType != 'O') {
+            cout << ", Input 2 = None";  // Show 'None' for chips that only use 1 input
+        }
 
         if (output) {
             cout << ", Output = " << output->getId();
@@ -137,7 +156,6 @@ void Chip::display() const {
         cout << endl;
     }
 }
-
 
 // Function to find a chip by its ID
 Chip* findChipById(Chip** chips, int numChips, const string& chipId) {
@@ -170,8 +188,17 @@ int main() {
         else if (chipId[0] == 'M') {
             chipTypeChar = 'M';
         }
+        else if (chipId[0] == 'S') {
+            chipTypeChar = 'S';
+        }
+        else if (chipId[0] == 'N') {
+            chipTypeChar = 'N';
+        }
         else if (chipId[0] == 'O') {
             chipTypeChar = 'O';
+        }
+        else if (chipId[0] == 'D') {
+            chipTypeChar = 'D'; // Division chip
         }
         else {
             chipTypeChar = 'I'; // Default fallback
@@ -200,7 +227,6 @@ int main() {
             else {
                 outputChip->setInput2(inputChip);
             }
-            // Set the output for the input chip if it is an intermediate node
             if (!inputChip->getOutput()) {
                 inputChip->setOutput(outputChip); // Establish the connection
             }
@@ -235,8 +261,23 @@ int main() {
     }
 
     cout << "***** Showing the connections that were established" << endl;
+    // Display input chips first
     for (int i = 0; i < numChips; ++i) {
-        chips[i]->display();
+        if (chips[i]->getType() == 'I') {
+            chips[i]->display();
+        }
+    }
+    // Display operation chips next
+    for (int i = 0; i < numChips; ++i) {
+        if (chips[i]->getType() != 'I' && chips[i]->getType() != 'O') {
+            chips[i]->display();
+        }
+    }
+    // Display output chip last
+    for (int i = 0; i < numChips; ++i) {
+        if (chips[i]->getType() == 'O') {
+            chips[i]->display();
+        }
     }
 
     // Clean up dynamic memory
